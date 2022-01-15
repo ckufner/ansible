@@ -1,0 +1,6 @@
+- name: my testplaybook
+  hosts: all
+  roles:
+#    - ansible_show_facts
+#    - system_update_packages
+    - docker_installation

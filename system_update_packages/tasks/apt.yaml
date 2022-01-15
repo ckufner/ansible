@@ -1,0 +1,24 @@
+- name: update package caches
+  become: true
+  ansible.builtin.apt:
+    update_cache: yes
+    cache_valid_time: "{{ system_update_packages_cache_valid_time }}"
+  register: system_update_packages_cache_update_result
+
+- block:
+  - name: update packages
+    become: true
+    ansible.builtin.apt:
+      upgrade: safe
+
+  - name: remove unused packages
+    become: true
+    ansible.builtin.apt:
+      autoremove: yes
+
+  - name: Remove all packages from the package cache
+    become: true
+    command:
+      cmd: apt-get clean
+      warn: false
+  when: system_update_packages_cache_update_result is defined and system_update_packages_cache_update_result.changed == true

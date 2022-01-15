@@ -1,0 +1,63 @@
+- name: remove old docker versions
+  become: true
+  ansible.builtin.apt:
+    state: absent
+    name:
+      - docker
+      - docker-engine
+      - docker.io
+      - containerd 
+      - runc
+
+- name: install required packages for docker repository installation
+  become: true
+  ansible.builtin.apt:
+    state: present
+    name:
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+
+- name: check presence of docker archive keyring
+  become: true
+  stat:
+    path: /usr/share/keyrings/docker-archive-keyring.gpg
+  register: docker_install_archive_keyring
+
+- block:
+  - name: Add an Apt signing key, uses whichever key is at the URL
+    become: true
+    ansible.builtin.apt_key:
+      url: https://download.docker.com/linux/ubuntu/gpg
+      keyring: /usr/share/keyrings/docker-archive-keyring.gpg
+      state: present
+
+  - name: remove downloaded docker gpg keyring tmp file
+    become: true
+    ansible.builtin.file:
+      path: /usr/share/keyrings/docker-archive-keyring.gpg~
+      state: absent   
+  when: not docker_install_archive_keyring.stat.exists
+
+- name: add docker repository
+  become: true
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/{{ ansible_distribution | lower }} {{ ansible_distribution_release | lower }} stable"
+    state: present
+  register: install_docker_ubuntu_repository
+
+- name: update the `apt` package index
+  become: true
+  ansible.builtin.apt:
+    update_cache: yes
+  when: install_docker_ubuntu_repository is defined and install_docker_ubuntu_repository.changed == true    
+
+- name: install docker
+  become: true
+  ansible.builtin.apt:
+    state: present
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io

@@ -1,0 +1,3 @@
+- name: install docker on ubuntu
+  import_tasks: ubuntu.yaml
+  when: ansible_facts['distribution']|lower == 'ubuntu'    

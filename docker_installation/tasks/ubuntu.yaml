@@ -45,13 +45,7 @@
   ansible.builtin.apt_repository:
     repo: "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/{{ ansible_distribution | lower }} {{ ansible_distribution_release | lower }} stable"
     state: present
-  register: install_docker_ubuntu_repository
-
-- name: update the `apt` package index
-  become: true
-  ansible.builtin.apt:
     update_cache: yes
-  when: install_docker_ubuntu_repository is defined and install_docker_ubuntu_repository.changed == true    
 
 - name: install docker
   become: true
